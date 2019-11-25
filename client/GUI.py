@@ -79,6 +79,7 @@ class Application:
         self.filme = tk.Button(self.filmes_place)
         self.next_button = tk.Button(self.filmes_place)
         self.back_movie = tk.Button(self.filmes_place)
+        self.favorito_button = tk.Button(self.filmes_place)
 
     def autenticar(self, name, senha):
         # Dicionario Usuario
@@ -299,6 +300,15 @@ class Application:
     def show_movie(self, filme):
         self.create_filmesPlace()
 
+        # Icone Favoritos
+        photo = tk.PhotoImage(file="images/favoritos_false.png")
+        self.favorito_button = tk.Button(self.filmes_place, image=photo, bg="gray25")
+        self.favorito_button.image = photo
+        self.favorito_button["command"] = lambda: self.favoritos(photo["file"], filme["id"])
+        self.favorito_button.place(x=1000, y=10)
+
+        #self.verificacao(filme["id"])
+
         # Imagem do filme
         photo1 = tk.PhotoImage(file=filme["link"])
         photo1 = photo1.subsample(2, 2)
@@ -344,6 +354,61 @@ class Application:
         excluir_button["bg"] = "darkred"
         excluir_button["activebackground"] = "DodgerBlue2"
         excluir_button.place(x=self.width_value - 500, y=self.height_value - 200)
+
+    def verificacao(self, id):
+        # Verificar se existe na lista favoritos do usuário
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        port = 8000
+        # Requisição
+        op = 7
+        client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+        # Enviar Dados
+        data = {}
+        data["idFilme"] = id
+        data["idUser"] = self.user["id"]
+        client_socket.sendto(json.dumps(data).encode(), ("127.0.0.1", port))
+        resp, address = client_socket.recvfrom(1024)
+        if int(resp.decode()) == 1:
+            # Alterar aparência do Botão
+            photo = tk.PhotoImage(file="images/favoritos_true.png")
+            self.favorito_button(self.filmes_place, image=photo)
+            self.favorito_button.image = photo
+
+    def favoritos(self, link, id):
+        if link == "images/favoritos_false.png":
+            # Alterar aparência do Botão
+            photo = tk.PhotoImage(file="images/favoritos_true.png")
+            self.favorito_button(self.filmes_place, image=photo)
+            self.favorito_button.image = photo
+
+            # Adicionar a lista favoritos do usuário
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            port = 8000
+            # Requisição
+            op = 4
+            client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+            # Enviar Dados
+            data = {}
+            data["idFilme"] = id
+            data["idUser"] = self.user["id"]
+            client_socket.sendto(json.dumps(data).encode(), ("127.0.0.1", port))
+        else:
+            # Alterar aparência do Botão
+            photo = tk.PhotoImage(file="images/favoritos_false.png")
+            self.favorito_button(self.filmes_place, image=photo)
+            self.favorito_button.image = photo
+
+            # Remover da lista favoritos do usuário
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            port = 8000
+            # Requisição
+            op = 6
+            client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+            # Enviar Dados
+            data = {}
+            data["idFilme"] = id
+            data["idUser"] = self.user["id"]
+            client_socket.sendto(json.dumps(data).encode(), ("127.0.0.1", port))
 
     def inserir(self):
         self.back_menu()

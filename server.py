@@ -145,12 +145,14 @@ while True:
     print("Server connected by {}".format(address))
     op = int(data.decode())
     # 0 -> Login
-    # 9 -> Registro
     # 1 -> Catalogo
     # 2 -> Buscar
     # 3 -> Inserir Novo filme
+    # 4 -> Inserir na lista de favoritos
     # 5 -> Excluir
-
+    # 6 -> Excluir da lista de favoritos
+    # 7 -> Verificar se existe na lista favoritos
+    # 9 -> Registro
     if op == 1: # Mostrar todos os Filmes
         catalogo()
 
