@@ -144,16 +144,20 @@ while True:
     data, address = serversocket.recvfrom(1024)
     print("Server connected by {}".format(address))
     op = int(data.decode())
-    # 0 -> Login
-    # 1 -> Catalogo
-    # 2 -> Buscar
-    # 3 -> Inserir Novo filme
+    # 0 -> Login x
+    # 1 -> Catalogo x
+    # 2 -> Buscar x
+    # 3 -> Inserir Novo filme x
     # 4 -> Inserir na lista de favoritos
-    # 5 -> Excluir
+    # 5 -> Excluir x
     # 6 -> Excluir da lista de favoritos
     # 7 -> Verificar se existe na lista favoritos
-    # 9 -> Registro
-    if op == 1: # Mostrar todos os Filmes
+    # 9 -> Registro x
+    # 10 -> Comentarios
+    if op == 0:
+        login()
+
+    elif op == 1: # Mostrar todos os Filmes
         catalogo()
 
     elif op == 2: # Buscar por um filme
@@ -162,8 +166,23 @@ while True:
     elif op == 3:
         inserir()
 
+    elif op == 4:
+        pass
+
     elif op == 5:
         excluir()
 
-    elif op == 0:
-        login()
+    elif op == 6:
+        pass
+
+    elif op == 7:
+        pass
+
+    elif op == 8:
+        pass
+
+    elif op == 9:
+        registro()
+
+    elif op == 10:
+        pass
