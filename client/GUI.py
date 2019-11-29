@@ -21,6 +21,7 @@ class Application:
         self.height_value = master.winfo_screenheight()
         self.menu_state = 0
         self.catalogo_state = 0
+        self.comentario_state = 0
         self.limite = 10
         self.user = {}
 
@@ -273,7 +274,7 @@ class Application:
             self.next_button.destroy()
             self.next_button = tk.Button(self.filmes_place, text=">>", font=("Small Fonts", "14", "bold"), fg="snow",
             bg="DodgerBlue2")
-            self.next_button["command"] = lambda: self.next(lista)
+            self.next_button["command"] = lambda: self.next(lista, 0)
             self.next_button.grid(row=3, column=6)
         else:
             self.next_button.destroy()
@@ -282,23 +283,38 @@ class Application:
             self.back_movie.destroy()
             self.back_movie = tk.Button(self.filmes_place, text="<<", font=("Small Fonts", "14", "bold"), fg="snow",
             bg="DodgerBlue2")
-            self.back_movie["command"] = lambda: self.back(lista)
+            self.back_movie["command"] = lambda: self.back(lista, 0)
             self.back_movie.grid(row=3, column=5)
         else:
             self.back_movie.destroy()
 
-    def next(self, lista):
-        self.catalogo_state += 1
-        self.limite += 10
-        self.create_button_movie(lista, self.catalogo_state)
+    def next(self, lista, op):
+        if(op == 0):
+            self.catalogo_state += 1
+            self.limite += 10
+            self.create_button_movie(lista, self.catalogo_state)
+        else:
+            self.comentario_state += 1
+            self.create_comentarios(lista)
 
-    def back(self, lista):
-        self.catalogo_state -= 1
-        self.limite -= 10
-        self.create_button_movie(lista, self.catalogo_state)
+    def back(self, lista, op):
+        if(op == 0):
+            self.catalogo_state -= 1
+            self.limite -= 10
+            self.create_button_movie(lista, self.catalogo_state)
+        else:
+            self.comentario_state -= 1
+            self.create_comentarios(lista)
 
     def show_movie(self, filme):
         self.create_filmesPlace()
+
+        # Icone Comentários
+        photo1 = tk.PhotoImage(file="images/comentarios_icon.png")
+        self.favorito_button = tk.Button(self.filmes_place, image=photo1, bg="gray25")
+        self.favorito_button.image = photo1
+        self.favorito_button["command"] = lambda: self.comentarios(filme["id"])
+        self.favorito_button.place(x=910, y=10)
 
         # Icone Favoritos
         photo = tk.PhotoImage(file="images/favoritos_false.png")
@@ -354,6 +370,71 @@ class Application:
         excluir_button["bg"] = "darkred"
         excluir_button["activebackground"] = "DodgerBlue2"
         excluir_button.place(x=self.width_value - 500, y=self.height_value - 200)
+
+    def comentarios(self, idFilme):
+        # Requisição para obter os comentários
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        op = 10
+        port = 8000
+        client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+        client_socket.sendto(str(idFilme).encode(), ("127.0.0.1", port))
+
+        # Recebendo comentários
+        comentarios, address = client_socket.recvfrom(4800)
+        self.create_comentarios(comentarios)
+
+    def create_comentarios(self, comentarios):
+        # filmes_place : Frame que contem os filmes
+        self.create_filmesPlace()
+
+        # Variáveis Auxiliadoras
+        indice = self.comentario_state * 4
+        linha = 0
+
+        comentario_label = {}
+        lista_exhibition = comentarios[indice:indice + 4]
+        for comment in lista_exhibition:
+            comentario = {}
+            comentario["id"] = comment[0]
+            comentario["descricao"] = comment[1]
+            comentario["titulo"] = comment[2]
+
+            # Nome do Usuário
+            comentario_label[self.user["name"]] = tk.Label(self.filmes_place, text=self.user["name"],
+                                            wraplength=160, bg='gray15',font=("Small Fonts", "14", "bold"), fg="snow")
+            comentario_label[self.user["name"]].grid(row=linha, column=1, sticky=tk.N)
+
+            # Título do comentário
+            comentario_label[comentario["titulo"]] = tk.Label(self.filmes_place, text=comentario["titulo"],
+                                            wraplength=160, bg='gray15',font=("Small Fonts", "14", "bold"), fg="snow")
+            comentario_label[comentario["titulo"]].grid(row=linha, column=0, sticky=tk.N)
+
+            # Descrição do comentário
+            comentario_label[str(comentario["id"])] = tk.Label(self.filmes_place, text=comentario["descricao"],
+                                            wraplength=700, bg='gray15',fg="snow", font=("Small Fonts", "14", "bold"))
+            comentario_label[str(comentario["id"])].grid(row=linha+1, column=0, sticky=tk.N)
+
+            # Posicionamento dos comentarios
+            linha += 1
+
+        # Botões de Paginação
+        if len(comentario) - (indice + 4) > 0:
+            self.next_button.destroy()
+            self.next_button = tk.Button(self.filmes_place, text=">>", font=("Small Fonts", "14", "bold"), fg="snow",
+                                         bg="DodgerBlue2")
+            self.next_button["command"] = lambda: self.next(comentarios, 1)
+            self.next_button.grid(row=5, column=2)
+        else:
+            self.next_button.destroy()
+
+        if self.comentario_state > 0:
+            self.back_movie.destroy()
+            self.back_movie = tk.Button(self.filmes_place, text="<<", font=("Small Fonts", "14", "bold"), fg="snow",
+                                        bg="DodgerBlue2")
+            self.back_movie["command"] = lambda: self.back(comentarios, 1)
+            self.back_movie.grid(row=5, column=3)
+        else:
+            self.back_movie.destroy()
 
     def verificacao(self, id):
         # Verificar se existe na lista favoritos do usuário
