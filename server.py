@@ -17,6 +17,8 @@ def catalogo():
 
     serversocket.sendto(json.dumps(filmes).encode(), address)
 
+    conexao.close()
+
 
 def buscar():
     # Estabelecendo conexão com BD
@@ -37,9 +39,10 @@ def buscar():
     cursor.execute("SELECT * FROM filmes WHERE nome LIKE '%{}%'".format(nome))
 
     listbusca = json.dumps(cursor.fetchall())
-    print(listbusca)
 
     serversocket.sendto(listbusca.encode(), address)
+
+    conexao.close()
 
 
 def inserir():
@@ -69,27 +72,95 @@ def inserir():
     conexao.close()
 
 
-def excluir():
+def inserir_favorito():
+    # Estabelecendo conexão com BD
+    conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
+    cursor = conexao.cursor()
+
+    # Recebendo Filme
+    ids, address = serversocket.recvfrom(2048)
+    ids = json.loads(ids.decode())
+
+    # Inserindo Filme aos favoritos
+    print(type(ids["idFilme"]), type(ids["idUser"]))
+    cursor.execute("INSERT INTO listafavoritos VALUES ('{}', '{}')".format(ids["idUser"], ids["idFilme"]))
+
+    conexao.commit()
+    conexao.close()
+
+
+def excluir_favorito():
     # Estabelecendo conexão com BD
     conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
     cursor = conexao.cursor()
 
     # Recebendo id
-    id_delete, address = serversocket.recvfrom(4000)
-    id_delete = id_delete.decode()
-    # with open("catalogo.json", "r") as f:
-    #    catalogo = json.load(f)
-    #    f.close()
+    ids, address = serversocket.recvfrom(4000)
+    ids = json.loads(ids.decode())
 
-    # for movie in catalogo:
-    #    if movie["id"] == id_delete:
-    #        catalogo.remove(movie)
-    #        break
-    # with open("catalogo.json", "w") as f:
-    #    json.dump(catalogo, f)
-    #    f.close()
-    cursor.execute("DELETE FROM filmes WHERE idFilmes = '{}'".format(id_delete))
+    cursor.execute("DELETE FROM listafavoritos WHERE Filmes_idFilmes = '{}' AND Usuarios_idUsuarios = '{}'".format(
+                                                                                        ids["idFilme"], ids["idUser"]))
     conexao.commit()
+    conexao.close()
+
+
+def verificar_favorito():
+    # Estabelecendo conexão com BD
+    conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
+    cursor = conexao.cursor()
+
+    # Recebendo ids
+    ids, address = serversocket.recvfrom(4000)
+    ids = json.loads(ids.decode())
+
+    # Buscando valores
+    cursor.execute("SELECT * FROM listafavoritos WHERE Filmes_idFilmes = '{}' AND Usuarios_idUsuarios = '{}'".format(
+        ids["idFilme"], ids["idUser"]))
+
+    favorito = cursor.fetchone()
+    print(favorito)
+    # Enviando resposta
+    if None == favorito:
+        serversocket.sendto(str(0).encode(), address)
+    else:
+        serversocket.sendto(str(1).encode(), address)
+
+    conexao.close()
+
+
+def pegar_comentarios():
+    # Estabelecendo conexao com o BD
+    conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
+    cursor = conexao.cursor()
+
+    # Obtendo id do filme
+    idFilme, address = serversocket.recvfrom(1024)
+    idFilme = int(idFilme.decode())
+
+    cursor.execute("SELECT * FROM comentarios WHERE Filmes_idFilmes = '{}'".format(idFilme))
+
+    comentarios = cursor.fetchall()
+
+    serversocket.sendto(json.dumps(comentarios).encode(), address)
+
+    conexao.close()
+
+
+def encontrar_usuario():
+    # Estabelecendo conexão com BD
+    conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
+    cursor = conexao.cursor()
+
+    # Recebendo Busca
+    idUser, address = serversocket.recvfrom(1024)
+    idUser = int(idUser.decode())
+
+    cursor.execute("SELECT nickName FROM usuarios WHERE idUsuarios = '{}'".format(idUser))
+
+    name = json.dumps(cursor.fetchone())
+
+    serversocket.sendto(name.encode(), address)
+
     conexao.close()
 
 
@@ -148,10 +219,11 @@ while True:
     # 1 -> Catalogo x
     # 2 -> Buscar x
     # 3 -> Inserir Novo filme x
-    # 4 -> Inserir na lista de favoritos
-    # 5 -> Excluir x
-    # 6 -> Excluir da lista de favoritos
-    # 7 -> Verificar se existe na lista favoritos
+    # 4 -> Inserir na lista de favoritos x
+    # 5 -> Inserir Comentário
+    # 6 -> Excluir da lista de favoritos x
+    # 7 -> Verificar se existe na lista favoritos x
+    # 8 -> Encontrar Usúario
     # 9 -> Registro x
     # 10 -> Comentarios
     if op == 0:
@@ -167,22 +239,22 @@ while True:
         inserir()
 
     elif op == 4:
-        pass
+        inserir_favorito()
 
     elif op == 5:
-        excluir()
+        pass
 
     elif op == 6:
-        pass
+        excluir_favorito()
 
     elif op == 7:
-        pass
+        verificar_favorito()
 
     elif op == 8:
-        pass
+        encontrar_usuario()
 
     elif op == 9:
         registro()
 
     elif op == 10:
-        pass
+        pegar_comentarios()
