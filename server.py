@@ -89,6 +89,29 @@ def inserir_favorito():
     conexao.close()
 
 
+def inserir_comentario():
+    # Estabelecendo conexão com BD
+    conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
+    cursor = conexao.cursor()
+
+    # Recebendo Filme
+    new_comentario, address = serversocket.recvfrom(2048)
+    new_comentario = json.loads(new_comentario.decode())
+
+    cursor.execute("SELECT MAX(idComentarios) FROM comentarios")
+    last_id = cursor.fetchone()
+    print(last_id)
+    new_comentario["id"] = last_id[0] + 1
+    # catalogo.append(new_movie)
+
+    # Inserindo Filme
+    cursor.execute("INSERT INTO comentarios VALUES ('{}', '{}', '{}', '{}', '{}')".format(new_comentario["id"],
+        new_comentario["descricao"], new_comentario["titulo"], new_comentario["idUser"], new_comentario["idFilme"]))
+
+    conexao.commit()
+    conexao.close()
+
+
 def excluir_favorito():
     # Estabelecendo conexão com BD
     conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
@@ -220,7 +243,7 @@ while True:
     # 2 -> Buscar x
     # 3 -> Inserir Novo filme x
     # 4 -> Inserir na lista de favoritos x
-    # 5 -> Inserir Comentário
+    # 5 -> Inserir Comentário x
     # 6 -> Excluir da lista de favoritos x
     # 7 -> Verificar se existe na lista favoritos x
     # 8 -> Encontrar Usúario
@@ -242,7 +265,7 @@ while True:
         inserir_favorito()
 
     elif op == 5:
-        pass
+        inserir_comentario()
 
     elif op == 6:
         excluir_favorito()
