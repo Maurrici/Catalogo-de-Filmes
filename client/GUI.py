@@ -105,10 +105,10 @@ class Application:
             user["name"] = data[1]
             user["email"] = data[2]
             self.user = user
-            self.tela_login.destroy()
             self.iniciar()
 
     def iniciar(self):
+        self.tela_login.destroy()
         # Elementos de Tela
 
         # A2 : Frame que conterá o MENU da Interface
@@ -295,7 +295,7 @@ class Application:
             self.create_button_movie(lista, self.catalogo_state)
         else:
             self.comentario_state += 1
-            self.create_comentarios(lista)
+            self.create_comentarios(lista,op)
 
     def back(self, lista, op):
         if(op == 0):
@@ -304,7 +304,7 @@ class Application:
             self.create_button_movie(lista, self.catalogo_state)
         else:
             self.comentario_state -= 1
-            self.create_comentarios(lista)
+            self.create_comentarios(lista, op)
 
     def show_movie(self, filme):
         self.create_filmesPlace()
@@ -366,6 +366,7 @@ class Application:
         excluir_button.place(x=self.width_value - 500, y=self.height_value - 200)
 
     def comentarios(self, idFilme):
+        self.back_menu()
         # Requisição para obter os comentários
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         op = 10
@@ -375,9 +376,29 @@ class Application:
 
         # Recebendo comentários
         comentarios, address = client_socket.recvfrom(4800)
-        self.create_comentarios(comentarios)
+        comentarios = json.loads(comentarios.decode())
+        if comentarios == []:
+            # filmes_place : Frame que contem os filmes
+            self.create_filmesPlace()
 
-    def create_comentarios(self, comentarios):
+            please = tk.Label(self.filmes_place, text="Não existem comentários para este filme", fg="snow", bg="gray15")
+            please["font"] = ("Small Fonts", "25", "bold")
+            please.place(x=270, y=350)
+
+            # Logo do programa
+            photo1 = tk.PhotoImage(file="images/logo.png")
+            # photo1 = photo1.subsample(2, 2)
+            label_image = tk.Label(self.filmes_place, image=photo1, bg="gray15", highlightbackground="black")
+            label_image.image = photo1
+            label_image.place(x=370, y=0)
+        else:
+            self.create_comentarios(comentarios, idFilme)
+
+    def create_comentarios(self, comentarios, idFilme):
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        op = 8
+        port = 8000
+
         # filmes_place : Frame que contem os filmes
         self.create_filmesPlace()
 
@@ -393,31 +414,41 @@ class Application:
             comentario["descricao"] = comment[1]
             comentario["titulo"] = comment[2]
 
-            # Nome do Usuário
-            comentario_label[self.user["name"]] = tk.Label(self.filmes_place, text=self.user["name"],
-                                            wraplength=160, bg='gray15',font=("Small Fonts", "14", "bold"), fg="snow")
-            comentario_label[self.user["name"]].grid(row=linha, column=1, sticky=tk.N)
+            # Buscando nome do Usuário que criou o comentário
+            client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+            client_socket.sendto(str(comment[3]).encode(), ("127.0.0.1", port))
+            nickUser, address = client_socket.recvfrom(4800)
+            nickUser = json.loads(nickUser.decode())
+            nickUser = nickUser[0]
 
-            # Título do comentário
-            comentario_label[comentario["titulo"]] = tk.Label(self.filmes_place, text=comentario["titulo"],
-                                            wraplength=160, bg='gray15',font=("Small Fonts", "14", "bold"), fg="snow")
-            comentario_label[comentario["titulo"]].grid(row=linha, column=0, sticky=tk.N)
+            # Nome do Usuário
+            comentario_label[nickUser] = tk.Label(self.filmes_place, text=nickUser+": "+comentario["titulo"],
+            borderwidth=2, relief="groove", wraplength=800, bg='gray15',font=("Small Fonts", "14", "bold"), fg="snow")
+            comentario_label[nickUser].grid(row=linha, column=0, sticky=tk.W)
 
             # Descrição do comentário
             comentario_label[str(comentario["id"])] = tk.Label(self.filmes_place, text=comentario["descricao"],
-                                            wraplength=700, bg='gray15',fg="snow", font=("Small Fonts", "14", "bold"))
-            comentario_label[str(comentario["id"])].grid(row=linha+1, column=0, sticky=tk.N)
+                                            wraplength=800, bg='gray15',fg="snow", font=("Small Fonts", "14", "bold"))
+            comentario_label[str(comentario["id"])].grid(row=linha+1, column=0, sticky=tk.W)
+            divisao = "-" * 135
+            tk.Label(self.filmes_place, text=divisao,wraplength=950, bg='gray15',font=("Small Fonts", "14", "bold"),
+                     fg="snow").grid(row=linha+2, column=0, sticky=tk.W)
 
             # Posicionamento dos comentarios
-            linha += 1
+            linha += 3
+
+        adicionar_button = tk.Button(self.filmes_place, text="Adicionar Comentário", wraplength=110, bg="DodgerBlue2",
+                                     fg="snow", font=("Small Fonts", "14", "bold"))
+        adicionar_button["command"] = lambda: self.inserir_comentario(idFilme)
+        adicionar_button.grid(row=0, column=1)
 
         # Botões de Paginação
-        if len(comentario) - (indice + 4) > 0:
+        if len(comentarios) - (indice + 4) > 0:
             self.next_button.destroy()
             self.next_button = tk.Button(self.filmes_place, text=">>", font=("Small Fonts", "14", "bold"), fg="snow",
                                          bg="DodgerBlue2")
-            self.next_button["command"] = lambda: self.next(comentarios, 1)
-            self.next_button.grid(row=5, column=2)
+            self.next_button["command"] = lambda: self.next(comentarios, idFilme)
+            self.next_button.grid(row=5, column=1)
         else:
             self.next_button.destroy()
 
@@ -425,10 +456,65 @@ class Application:
             self.back_movie.destroy()
             self.back_movie = tk.Button(self.filmes_place, text="<<", font=("Small Fonts", "14", "bold"), fg="snow",
                                         bg="DodgerBlue2")
-            self.back_movie["command"] = lambda: self.back(comentarios, 1)
-            self.back_movie.grid(row=5, column=3)
+            self.back_movie["command"] = lambda: self.back(comentarios, idFilme)
+            self.back_movie.grid(row=6, column=1)
         else:
             self.back_movie.destroy()
+
+    def inserir_comentario(self, idFilme):
+        self.back_menu()
+        self.titulo_label["text"] = "Comentário"
+        # back_button : Buttun que volta ao MENU (Não está inserido na tela cada função deve inseri - lo)
+        self.create_backButton()
+        # filmes_place : Frame que contem os filmes
+        self.create_filmesPlace()
+        # Criando caixas de inserção de informações
+
+        # Nome
+        titulo_label = tk.Label(self.filmes_place, text="Título:", font=("Small Fonts", "15", "bold"),
+                              bg="gray15", fg="snow")
+        titulo_label.place(x=70, y=100)
+        titulo_entry = tk.Entry(self.filmes_place, bg="gray25", fg="snow", font=("Small Fonts", "15", "bold"), width=30)
+        titulo_entry.place(x=265, y=103)
+
+        # Resume
+        descricao_label = tk.Label(self.filmes_place, text="Descrição:", font=("Small Fonts", "15", "bold"),
+                                bg="gray15", fg="snow")
+        descricao_label.place(x=70, y=133)
+        descricao_entry = tk.Entry(self.filmes_place, bg="gray25", fg="snow", font=("Small Fonts", "15", "bold"),
+                             width=30)
+        descricao_entry.place(x=265, y=136)
+
+        # Botao de inserir
+        inserir_button = tk.Button(self.filmes_place, text="Adicionar", padx=50, pady=10, fg="snow")
+        inserir_button["font"] = ("Small Fonts", "15", "bold")
+        inserir_button["command"] = lambda: self.enviar_comentario(titulo_entry.get(), descricao_entry.get(), idFilme)
+        inserir_button["bg"] = "DodgerBlue2"
+        inserir_button["activebackground"] = "darkred"
+        inserir_button.place(x=self.width_value - 500, y=self.height_value - 200)
+
+    def enviar_comentario(self, titulo, descricao, idFilme):
+        if ((titulo == "") or (descricao == "")):
+            # ALERTA
+            alerta_label = tk.Label(self.filmes_place, text="Preencha todos os campos e tente novamente",
+                                    font=("Small Fonts", "15", "bold"), bg="gray15", fg="darkred")
+            alerta_label.place(x=100, y=self.height_value - 400)
+        else:
+            self.back_menu()
+            # Enviando novo filme para o servidor
+            comentario = {}
+            comentario["titulo"] = titulo
+            comentario["descricao"] = descricao
+            comentario["idUser"] = self.user["id"]
+            comentario["idFilme"] = idFilme
+
+            # Obtendo catálogo do Servidor
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            op = 5
+            port = 8000
+            client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+            comentario = json.dumps(comentario)
+            client_socket.sendto(comentario.encode(), ("127.0.0.1", port))
 
     def verificacao(self, id):
         # Verificar se existe na lista favoritos do usuário
