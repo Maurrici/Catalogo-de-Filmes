@@ -32,21 +32,10 @@ class Application:
         self.a1.grid(row=0, column=0)
 
         # Login
-        self.tela_login = tk.Frame(self.a1, width=self.width_value, height=self.height_value, bg="gray15")
-        self.tela_login.place(x=0, y=0)
 
-        nick_entry = tk.Entry(self.tela_login, highlightthickness=2, highlightbackground="black", width=20, bg="gray25",
-        fg="snow", font=("Small Fonts", "15", "bold"))
-        nick_entry.place(x=100, y=100)
 
-        senha_entry = tk.Entry(self.tela_login, highlightthickness=2, highlightbackground="black", width=20, bg="gray25",
-        fg="snow", font=("Small Fonts", "15", "bold"))
-        senha_entry.place(x=100, y=200)
-
-        login_button = tk.Button(self.tela_login, text="Logar")
-        login_button["command"] = lambda: self.autenticar(nick_entry.get(), senha_entry.get())
-        login_button.place(x=150, y=300)
-
+        # B1 : Frame que conterá a tela de Registro
+        self.tela_regist = tk.Frame(self.a1, highlightthickness=2, highlightbackground="black")
 
         # A2 : Frame que conterá o MENU da Interface
         self.a2 = tk.Frame(self.a1, highlightthickness=2, highlightbackground="black")
@@ -82,6 +71,55 @@ class Application:
         self.back_movie = tk.Button(self.filmes_place)
         self.favorito_button = tk.Button(self.filmes_place)
 
+        self.login()
+
+    def login(self):
+        self.tela_regist.destroy()
+        self.tela_login = tk.Frame(self.a1, width=self.width_value, height=self.height_value, bg="gray15")
+        self.tela_login.place(x=0, y=0)
+
+        nick_entry = tk.Entry(self.tela_login, highlightthickness=2, highlightbackground="black", width=20, bg="gray25",
+                              fg="snow", font=("Small Fonts", "15", "bold"))
+        nick_entry.place(x=550, y=270)
+
+        senha_entry = tk.Entry(self.tela_login, highlightthickness=2, highlightbackground="black", width=20,
+                               bg="gray25",
+                               fg="snow", font=("Small Fonts", "15", "bold"))
+        senha_entry.place(x=550, y=310)
+
+        login_button = tk.Button(self.tela_login, text="Logar", bg="gray25", fg="snow")
+        login_button["font"] = ("Small Fonts", "15", "bold")
+        login_button["command"] = lambda: self.autenticar(nick_entry.get(), senha_entry.get())
+        login_button.place(x=645, y=370)
+
+        login_button1 = tk.Button(self.tela_login, text="Não tem Login? Cadastre-se clicando aqui!", bg="gray25",
+                                  fg="snow")
+        login_button1["font"] = ("Small Fonts", "13", "bold")
+        login_button1["command"] = lambda: self.registrar()
+        login_button1.place(x=500, y=430)
+
+        login_label = tk.Label(self.tela_login, text="Login", bg="gray15", fg="snow")
+        login_label["font"] = ("Small Fonts", "25", "bold")
+        login_label.place(x=630, y=205)
+
+        nick_label = tk.Label(self.tela_login, text="Nickname:", bg="gray15", fg="snow")
+        nick_label["font"] = ("Small Fonts", "15", "bold")
+        nick_label.place(x=437, y=270)
+
+        senha_label = tk.Label(self.tela_login, text="Senha:", bg="gray15", fg="snow")
+        senha_label["font"] = ("Small Fonts", "15", "bold")
+        senha_label.place(x=470, y=310)
+
+        photo1 = tk.PhotoImage(file="images/logo.png")
+        photo1 = photo1.subsample(2, 2)
+        self.label_image1 = tk.Label(self.tela_login, image=photo1, bg="gray15", highlightbackground="black")
+        self.label_image1.image = photo1
+        self.label_image1.place(x=0, y=0)
+
+        self.titulo1_label = tk.Label(self.tela_login, text="Atlas Cinéfilo", fg="snow", bg="gray15")
+        self.titulo1_label["font"] = ("Small Fonts", "31", "bold")
+        self.titulo1_label.place(x=131, y=50)
+
     def autenticar(self, name, senha):
         # Dicionario Usuario
         user = {}
@@ -98,7 +136,9 @@ class Application:
         data, address = client_socket.recvfrom(1024)
         data = json.loads(data.decode())
         if (data == None):
-            tk.Label(self.tela_login, text="NickName ou Senha incorretos").place(x=100,y=400)
+            alerta_label = tk.Label(self.tela_login, text="NickName ou senha incorretos!",
+                                    font=("Small Fonts", "15", "bold"), bg="gray15", fg="darkred")
+            alerta_label.place(x=500, y=490)
         else:
             # Dicionário User
             user["id"] = data[0]
@@ -107,8 +147,112 @@ class Application:
             self.user = user
             self.iniciar()
 
+    def registrar(self):
+        self.tela_login.destroy()
+
+        self.tela_regist = tk.Frame(self.a1, width=self.width_value, height=self.height_value, bg="gray15")
+        self.tela_regist.place(x=0, y=0)
+
+        login_button0 = tk.Button(self.tela_regist, text="Já é cadastrado? Faça login clicando aqui!", bg="gray25", fg="snow")
+        login_button0["font"] = ("Small Fonts", "13", "bold")
+        login_button0["command"] = lambda: self.login()
+        login_button0.place(x=490, y=490)
+
+        nickR_entry = tk.Entry(self.tela_regist, highlightthickness=2, highlightbackground="black", width=20, bg="gray25",
+                              fg="snow", font=("Small Fonts", "15", "bold"))
+        nickR_entry.place(x=550, y=270)
+
+        senhaR_entry = tk.Entry(self.tela_regist, highlightthickness=2, highlightbackground="black", width=20,
+                               bg="gray25",
+                               fg="snow", font=("Small Fonts", "15", "bold"))
+        senhaR_entry.place(x=550, y=350)
+
+        senhaR_entry2 = tk.Entry(self.tela_regist, highlightthickness=2, highlightbackground="black", width=20,
+                                bg="gray25",
+                                fg="snow", font=("Small Fonts", "15", "bold"))
+        senhaR_entry2.place(x=550, y=390)
+
+        emailR_entry = tk.Entry(self.tela_regist, highlightthickness=2, highlightbackground="black", width=20,
+                                bg="gray25",
+                                fg="snow", font=("Small Fonts", "15", "bold"))
+        emailR_entry.place(x=550, y=310)
+
+        cadastroR_label = tk.Label(self.tela_regist, text="Cadastro", bg="gray15", fg="snow")
+        cadastroR_label["font"] = ("Small Fonts", "25", "bold")
+        cadastroR_label.place(x=610, y=205)
+
+        nickR_label = tk.Label(self.tela_regist, text="Nickname:", bg="gray15", fg="snow")
+        nickR_label["font"] = ("Small Fonts", "15", "bold")
+        nickR_label.place(x=437, y=270)
+
+        senhaR_label = tk.Label(self.tela_regist, text="Email:", bg="gray15", fg="snow")
+        senhaR_label["font"] = ("Small Fonts", "15", "bold")
+        senhaR_label.place(x=485, y=310)
+
+        senhaR_label = tk.Label(self.tela_regist, text="Senha:", bg="gray15", fg="snow")
+        senhaR_label["font"] = ("Small Fonts", "15", "bold")
+        senhaR_label.place(x=470, y=350)
+
+        senhaR_label = tk.Label(self.tela_regist, text="Confirmar Senha:", bg="gray15", fg="snow")
+        senhaR_label["font"] = ("Small Fonts", "15", "bold")
+        senhaR_label.place(x=368, y=390)
+
+        cadastro_button2 = tk.Button(self.tela_regist, text="Cadastrar", bg="gray25", fg="snow")
+        cadastro_button2["font"] = ("Small Fonts", "15", "bold")
+        cadastro_button2["command"] = lambda: self.enviar_cadastro(nickR_entry.get(), senhaR_entry.get(), senhaR_entry2.get(), emailR_entry.get())
+        cadastro_button2.place(x=625, y=440)
+
+        photo1 = tk.PhotoImage(file="images/logo.png")
+        photo1 = photo1.subsample(2, 2)
+        self.label_image2 = tk.Label(self.tela_regist, image=photo1, bg="gray15", highlightbackground="black")
+        self.label_image2.image = photo1
+        self.label_image2.place(x=0, y=0)
+
+        self.tituloR_label = tk.Label(self.tela_regist, text="Atlas Cinéfilo", fg="snow", bg="gray15")
+        self.tituloR_label["font"] = ("Small Fonts", "31", "bold")
+        self.tituloR_label.place(x=131, y=50)
+
+    def enviar_cadastro(self, name, senha, senha1, email):
+
+        if ((name == "") or (senha == "") or (email == "")):
+            # ALERTA
+            alerta_label = tk.Label(self.tela_regist, text="Preencha todos os campos e tente novamente",
+                                    font=("Small Fonts", "15", "bold"), bg="gray15", fg="darkred")
+            alerta_label.place(x=450, y=490)
+
+        elif(senha!=senha1):
+            self.labTeste = tk.Label(self.tela_regist, text="As senhas não estão iguais!\nPor favor as digite corretamente.", bg = "gray15", fg = "darkred")
+            self.labTeste["font"] = ("Small Fonts", "15", "bold")
+            self.labTeste.place(x=540, y=540)
+
+        else:
+            # Enviar
+            user = {}
+            user["name"] = name
+            user["senha"] = senha
+            user["email"] = email
+
+            # Enviando requisição
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            op = 9
+            port = 8000
+            client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+            client_socket.sendto(json.dumps(user).encode(), ("127.0.0.1", port))
+
+            new_user, address = client_socket.recvfrom(1024)
+            new_user = json.loads(new_user.decode())
+            print(new_user)
+
+            user["id"] = new_user["id"]
+            user["name"] = new_user["name"]
+            user["email"] = new_user["email"]
+
+            self.user = user
+            self.iniciar()
+
     def iniciar(self):
         self.tela_login.destroy()
+        self.tela_regist.destroy()
         # Elementos de Tela
 
         # A2 : Frame que conterá o MENU da Interface
@@ -357,13 +501,6 @@ class Application:
         fg="snow", font=("Small Fonts", "14", "bold"))
         resume_label.place(x=20, y=400)
 
-        # Botao de excluir
-        excluir_button = tk.Button(self.filmes_place, text="Excluir", padx=50, pady=10, fg="snow")
-        excluir_button["font"] = ("Small Fonts", "15", "bold")
-        excluir_button["command"] = lambda: self.excluir(filme["id"])
-        excluir_button["bg"] = "darkred"
-        excluir_button["activebackground"] = "DodgerBlue2"
-        excluir_button.place(x=self.width_value - 500, y=self.height_value - 200)
 
     def comentarios(self, idFilme):
         self.back_menu()
@@ -383,7 +520,7 @@ class Application:
 
             please = tk.Label(self.filmes_place, text="Não existem comentários para este filme", fg="snow", bg="gray15")
             please["font"] = ("Small Fonts", "25", "bold")
-            please.place(x=270, y=350)
+            please.place(x=230, y=390)
 
             # Logo do programa
             photo1 = tk.PhotoImage(file="images/logo.png")
@@ -391,6 +528,14 @@ class Application:
             label_image = tk.Label(self.filmes_place, image=photo1, bg="gray15", highlightbackground="black")
             label_image.image = photo1
             label_image.place(x=370, y=0)
+
+            # Botão de inserir Comentários
+            adicionar_button = tk.Button(self.filmes_place, text="Adicionar Comentário", wraplength=110,
+                                         bg="DodgerBlue2",
+                                         fg="snow", font=("Small Fonts", "14", "bold"))
+            adicionar_button["command"] = lambda: self.inserir_comentario(idFilme)
+            adicionar_button.grid(row=0, column=1)
+
         else:
             self.create_comentarios(comentarios, idFilme)
 
