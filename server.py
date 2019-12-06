@@ -210,7 +210,6 @@ def login():
     # Fechando conexão com Banco de Dados
     conexao.close()
 
-
 def registro():
     # Estabelecendo conexão com BD
     conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
@@ -239,6 +238,22 @@ def registro():
     conexao.commit()
     conexao.close()
 
+def favoritos():
+    # with open("catalogo.json", "r") as f:
+    #   catalogo = json.load(f)
+    #   f.close()
+
+    # Obtendo filmes
+    conexao = pymysql.connect(db="filmesbd", user="root", passwd="")
+    cursor = conexao.cursor()
+
+    idUser, address = serversocket.recvfrom(1024)
+    idUser = int(idUser.decode())
+    cursor.execute("Select * from filmes FIL where FIL.idFilmes IN (select LF.Filmes_idFilmes from listafavoritos LF where (LF.Usuarios_idUsuarios = '{}') and (LF.Filmes_idFilmes = FIL.idFilmes))".format(idUser))
+
+    favoritos = cursor.fetchall()
+    serversocket.sendto(json.dumps(favoritos).encode(), address)
+    conexao.close()
 
 # Criando Socket para conexão
 port = 8000
@@ -260,6 +275,7 @@ while True:
     # 8 -> Encontrar Usúario
     # 9 -> Registro x
     # 10 -> Comentarios
+    # 11 -> Exibir filmes favoritos
     if op == 0:
         login()
 
@@ -292,3 +308,6 @@ while True:
 
     elif op == 10:
         pegar_comentarios()
+
+    elif op == 11:
+        favoritos()
