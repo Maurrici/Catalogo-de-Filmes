@@ -2,7 +2,6 @@ import socket
 import json
 import pymysql
 
-
 def catalogo():
     # with open("catalogo.json", "r") as f:
     #   catalogo = json.load(f)
@@ -59,7 +58,10 @@ def inserir():
     new_movie["link"] = "images/default.png"
     cursor.execute("SELECT MAX(idFilmes) FROM filmes")
     last_id = cursor.fetchone()
-    new_movie["id"] = str(last_id[0] + 1)
+    if last_id[0] == None:
+        new_movie["id"] = 1
+    else:
+        new_movie["id"] = str(last_id[0] + 1)
     # catalogo.append(new_movie)
 
     # Inserindo Filme
@@ -100,8 +102,10 @@ def inserir_comentario():
 
     cursor.execute("SELECT MAX(idComentarios) FROM comentarios")
     last_id = cursor.fetchone()
-    print(last_id)
-    new_comentario["id"] = last_id[0] + 1
+    if last_id[0] == None:
+        new_comentario["id"] = 1
+    else:
+        new_comentario["id"] = last_id[0] + 1
     # catalogo.append(new_movie)
 
     # Inserindo Filme
@@ -217,14 +221,21 @@ def registro():
     new_user = json.loads(new_user.decode())
 
     # Criando id
-    cursor.execute("SELECT MAX(idFilmes) FROM filmes")
+    cursor.execute("SELECT MAX(idComentarios) FROM comentarios")
     last_id = cursor.fetchone()
-    new_user["id"] = str(last_id[0] + 1)
+
+    if last_id[0] == None:
+        new_user["id"] = 1
+    else:
+        new_user["id"] = last_id[0] + 1
+    print(new_user["id"])
+    print(new_user)
+
+    serversocket.sendto(json.dumps(new_user).encode(), address)
 
     # Inserindo Usuario
     cursor.execute("INSERT INTO usuarios VALUES ('{}', '{}', '{}', '{}')".format(new_user["id"], new_user["name"],
-                                                                                new_user["email"],new_user["senha"]))
-
+                                                                         new_user["email"],new_user["senha"]))
     conexao.commit()
     conexao.close()
 
