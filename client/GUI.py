@@ -308,21 +308,29 @@ class Application:
             filme_button["activebackground"] = "darkred"
             filme_button.place(x=3, y=30)
 
-            # buscar_button : Botão que levará ao catalogo de filmes
+            # favorito_buttom : Botão que mostrará os favoritos
+            favoito_button = tk.Button(self.barra_menu, text="FAVORITOS", padx=67, pady=5, fg="snow")
+            favoito_button["font"] = ("Small Fonts", "12", "bold")
+            favoito_button["command"] = self.show_favoritos
+            favoito_button["bg"] = "DodgerBlue2"
+            favoito_button["activebackground"] = "darkred"
+            favoito_button.place(x=3, y=80)
+
+            # buscar_button : Botão que levará ao menu de busca
             buscar_button = tk.Button(self.barra_menu, text="BUSCAR UM FILME", padx=34, pady=5, fg="snow")
             buscar_button["font"] = ("Small Fonts", "12", "bold")
             buscar_button["bg"] = "DodgerBlue2"
             buscar_button["command"] = self.buscar
             buscar_button["activebackground"] = "darkred"
-            buscar_button.place(x=3, y=80)
+            buscar_button.place(x=3, y=130)
 
-            # inserir_button : Botão que levará ao catalogo de filmes
+            # inserir_button : Botão que levará ao formulário de adição de filmes
             inserir_button = tk.Button(self.barra_menu, text="INSERIR NOVO FILME", padx=25, pady=5, fg="snow")
             inserir_button["font"] = ("Small Fonts", "12", "bold")
             inserir_button["command"] = self.inserir
             inserir_button["bg"] = "DodgerBlue2"
             inserir_button["activebackground"] = "darkred"
-            inserir_button.place(x=3, y=130)
+            inserir_button.place(x=3, y=180)
 
         else:
             self.menu_button["text"] = "MENU  | v |"
@@ -500,7 +508,6 @@ class Application:
         resume_label = tk.Label(self.filmes_place, text="SINOPSE: " + filme["resume"], wraplength=700, bg='gray15',
         fg="snow", font=("Small Fonts", "14", "bold"))
         resume_label.place(x=20, y=400)
-
 
     def comentarios(self, idFilme):
         self.back_menu()
@@ -722,7 +729,7 @@ class Application:
     def inserir(self):
         self.back_menu()
         self.titulo_label["text"] = "Inserir Filmes"
-        # back_button : Buttun que volta ao MENU (Não está inserido na tela cada função deve inseri - lo)
+        # back_button : Button que volta ao MENU (Não está inserido na tela cada função deve inseri - lo)
         self.create_backButton()
         # filmes_place : Frame que contem os filmes
         self.create_filmesPlace()
@@ -845,6 +852,26 @@ class Application:
         else:
             for movie in filmes:
                 self.create_button_movie(filmes, self.catalogo_state)
+
+    def show_favoritos(self):
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        op = 11
+        port = 8000
+        client_socket.sendto(str(op).encode(), ("127.0.0.1", port))
+        client_socket.sendto(str(self.user["id"]).encode(), ("127.0.0.1", port))
+        favoritos, address = client_socket.recvfrom(120000)
+        favoritos = json.loads(favoritos.decode())
+        # Chamando função que irá criar os botoes
+        if not favoritos:
+            self.back_menu()
+            self.titulo_label["text"] = "Favoritos"
+            # filmes_place : Frame que contem os filmes
+            self.create_filmesPlace()
+            please = tk.Label(self.filmes_place, text="Não há favoritos no momento.\nContinue navegando no nosso catálogo!", fg="snow", bg="gray15")
+            please["font"] = ("Small Fonts", "25", "bold")
+            please.place(x=230, y=230)
+        else:
+            self.create_button_movie(favoritos, self.catalogo_state)
 
     def excluir(self, id):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
